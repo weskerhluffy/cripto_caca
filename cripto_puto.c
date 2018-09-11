@@ -3,6 +3,7 @@
 // XXX: http://xoptutorials.com/index.php/2017/01/01/spojcrypton/
 // XXX: https://github.com/fookwood/zoj-solutions-fish_ball/blob/master/Vol.19(2800-2899)/%232806%20The%20Embarrassed%20Cryptographer/p2806.cpp
 // XXX: https://www.spoj.com/problems/NORDICPD/
+
 #if 1
 #define _GNU_SOURCE
 //#define _XOPEN_SOURCE 700
