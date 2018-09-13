@@ -4,6 +4,20 @@
 // XXX: https://github.com/fookwood/zoj-solutions-fish_ball/blob/master/Vol.19(2800-2899)/%232806%20The%20Embarrassed%20Cryptographer/p2806.cpp
 // XXX: https://www.spoj.com/problems/NORDICPD/
 
+/*
+ the thing is that you need to reduce the constant of the algorithm by storing more than just a digit in every array slot of the big number representation, so that the number of operations needed to calculate the mod is also reduced. For example:
+
+123456789 can be stored as
+ 1|2|3|4|5|6|7|8|9
+where each slot is a char, or as
+123|456|789
+where each slot is a int.
+
+This does not reduce the complexity of the algorithm, but speeds up the mod operation.
+
+Now, you can also test your algorithm in  https://www.spoj.com/problems/CRYPTON/ where the judge is a bit less strict. There is not needed to do this "compression" of the large number
+ */
+
 #if 1
 #define _GNU_SOURCE
 //#define _XOPEN_SOURCE 700
@@ -291,6 +305,7 @@ CACA_COMUN_FUNC_STATICA char *caca_comun_arreglo_a_cadena_entero_largo_sin_signo
 
 #define caca_comun_arreglo_a_cadena_entero_largo_sin_signo_buf_local(a,a_tam) caca_comun_arreglo_a_cadena_entero_largo_sin_signo(a,a_tam,CACA_COMUN_BUF_STATICO)
 #define caca_comun_arreglo_a_cadena_buf_local(a,a_tam) caca_comun_arreglo_a_cadena(a,a_tam,CACA_COMUN_BUF_STATICO)
+#define caca_comun_arreglo_a_cadena_natural_buf_local(a,a_tam) caca_comun_arreglo_a_cadena_natural(a,a_tam,CACA_COMUN_BUF_STATICO)
 
 CACA_COMUN_FUNC_STATICA void caca_comun_strreplace(char s[], char chr,
 		char repl_chr) {
@@ -438,6 +453,19 @@ CACA_COMUN_FUNC_STATICA void caca_comun_invierte_arreglo_byteme(byteme *a,
 	}
 }
 
+CACA_COMUN_FUNC_STATICA void caca_comun_invierte_arreglo_natural(natural *a,
+		natural a_tam) {
+	natural i = 0;
+	natural j = a_tam - 1;
+	while (i < j) {
+		natural t = a[i];
+		a[i] = a[j];
+		a[j] = t;
+		i++;
+		j--;
+	}
+}
+
 #endif
 
 #if 1
@@ -545,7 +573,7 @@ CACA_COMUN_FUNC_STATICA natural numero_largote_cuenta_digitos(byteme *a,
 	return i + 1;
 }
 
-CACA_COMUN_FUNC_STATICA char *numero_largote_a_cadena(byteme *a, natural a_tam,
+CACA_COMUN_FUNC_STATICA char *numero_largote_a_cadena(natural *a, natural a_tam,
 		char *buffer, natural buffer_tam) {
 	int i = 0;
 	natural j = 0;
@@ -562,12 +590,13 @@ CACA_COMUN_FUNC_STATICA char *numero_largote_a_cadena(byteme *a, natural a_tam,
 	return buffer;
 }
 
-CACA_COMUN_FUNC_STATICA natural numero_largote_mod(byteme *n, natural n_tam,
-		natural d) {
-	natural mod = 0;
+CACA_COMUN_FUNC_STATICA natural numero_largote_mod(natural *n, natural n_tam,
+		natural d, natural tu) {
+	entero_largo mod = 0;
+	natural f = pow(10, tu);
 	for (int i = n_tam - 1; i >= 0; i--) {
 		caca_log_debug("modulando %u contra %u, mod %u", n[i], d, mod);
-		mod = (mod * 10 + n[i]) % d;
+		mod = (mod * f + n[i]) % d;
 	}
 	caca_log_debug("%s mod %u es %u",
 			numero_largote_a_cadena(n, n_tam, CACA_COMUN_BUF_STATICO, CACA_COMUN_BUF_STATICO_TAM),
@@ -577,6 +606,29 @@ CACA_COMUN_FUNC_STATICA natural numero_largote_mod(byteme *n, natural n_tam,
 
 #endif
 
+CACA_COMUN_FUNC_STATICA natural numero_largote_comprime(natural *a,
+		natural a_tam, natural tam_unidad) {
+	assert_timeout(tam_unidad > 1);
+	natural j = 0;
+	natural k = 0;
+	natural acum = 0;
+	for (natural i = 0; i < a_tam; i++) {
+		caca_log_debug("acum %u a[i] %u k %u", acum, a[i], k);
+		if (i && !(i % tam_unidad)) {
+			a[j] = acum;
+			j++;
+			k = 0;
+			acum = 0;
+		}
+		acum = acum + a[i] * pow(10, k);
+		k++;
+	}
+	if (acum) {
+		a[j] = acum;
+		j++;
+	}
+	return j;
+}
 #if 1
 
 #define PRIMOS_CACA_MAX ((int)1E6)
@@ -606,14 +658,15 @@ CACA_COMUN_FUNC_STATICA natural primos_caca_criba(natural limite) {
 
 #define CRIPTO_CACA_BUFFER_MAX ((PRIMOS_CACA_MAX + 1) * 8)
 char buffer[CRIPTO_CACA_BUFFER_MAX] = { 0 };
+natural k[CRIPTO_CACA_BUFFER_MAX] = { 0 };
 
-CACA_COMUN_FUNC_STATICA natural cripto_caca_menor_factor_primo(byteme *a,
-		natural a_tam) {
+CACA_COMUN_FUNC_STATICA natural cripto_caca_menor_factor_primo(natural *a,
+		natural a_tam, natural tam_unidad) {
 	natural i = 0;
 	natural r = 0;
 	natural resi = 0;
 	while (i < primos_caca_tam
-			&& (resi = numero_largote_mod(a, a_tam, primos_caca[i]))) {
+			&& (resi = numero_largote_mod(a, a_tam, primos_caca[i], tam_unidad))) {
 //		printf("resi %u\n", resi);
 		i++;
 	}
@@ -624,10 +677,11 @@ CACA_COMUN_FUNC_STATICA natural cripto_caca_menor_factor_primo(byteme *a,
 	return r;
 }
 
-CACA_COMUN_FUNC_STATICA natural cripto_caca_core(byteme *a, natural a_tam,
-		natural limite) {
+CACA_COMUN_FUNC_STATICA natural cripto_caca_core(natural *a, natural a_tam,
+		natural limite, natural tam_unidad) {
 	natural r = 0;
-	natural factor_primo_minimo = cripto_caca_menor_factor_primo(a, a_tam);
+	natural factor_primo_minimo = cripto_caca_menor_factor_primo(a, a_tam,
+			tam_unidad);
 	if (factor_primo_minimo < limite) {
 		r = factor_primo_minimo;
 	}
@@ -636,32 +690,36 @@ CACA_COMUN_FUNC_STATICA natural cripto_caca_core(byteme *a, natural a_tam,
 }
 
 CACA_COMUN_FUNC_STATICA void cripto_caca_main() {
-	byteme *k = buffer;
+	char *b = buffer;
 	size_t s = CRIPTO_CACA_BUFFER_MAX;
+	natural tam_unidad = 3;
 	primos_caca_criba(PRIMOS_CACA_MAX);
 //	caca_log_debug("%s\n", caca_comun_arreglo_a_cadena_natural(primos_caca, primos_caca_tam, buffer));
 //	while (getline(&k, &s, stdin) != -1) {
-	while (fgets(k, s, stdin)) {
+	while (fgets(b, s, stdin)) {
 		natural l = 0;
 		natural i = 0;
 		natural k_tam = 0;
-		while (i < s && !caca_comun_es_digito(k[i])) {
+		while (i < s && !caca_comun_es_digito(b[i])) {
 			i++;
 		}
-		while (i < s && caca_comun_es_digito(k[i])) {
-			k[i] = caca_comun_caracter_a_num(k[i]);
+		while (i < s && caca_comun_es_digito(b[i])) {
+			k[i] = caca_comun_caracter_a_num(b[i]);
 			i++;
 			k_tam++;
 		}
 		if (!k_tam) {
 			break;
 		}
-		caca_comun_invierte_arreglo_byteme(k, k_tam);
-		while (i < s && !caca_comun_es_digito(k[i])) {
+		caca_comun_invierte_arreglo_natural(k, k_tam);
+		caca_log_debug("rpr decim %s",
+				caca_comun_arreglo_a_cadena_natural_buf_local(k, k_tam));
+		k_tam = numero_largote_comprime(k, k_tam, tam_unidad);
+		while (i < s && !caca_comun_es_digito(b[i])) {
 			i++;
 		}
-		while (i < s && caca_comun_es_digito(k[i])) {
-			l = l * 10 + caca_comun_caracter_a_num(k[i]);
+		while (i < s && caca_comun_es_digito(b[i])) {
+			l = l * 10 + caca_comun_caracter_a_num(b[i]);
 			i++;
 		}
 
@@ -670,9 +728,9 @@ CACA_COMUN_FUNC_STATICA void cripto_caca_main() {
 		}
 
 		caca_log_debug("k %s y l %u",
-				caca_comun_arreglo_a_cadena_buf_local(k, k_tam), l);
+				caca_comun_arreglo_a_cadena_natural_buf_local(k, k_tam), l);
 
-		natural r = cripto_caca_core(k, k_tam, l);
+		natural r = cripto_caca_core(k, k_tam, l, tam_unidad);
 //		natural r = 0;
 		if (r) {
 			printf("BAD %u\n", r);

@@ -82,7 +82,8 @@ void sieve() {
 }
 
 int mod(char *n, int d) {
-	int i, mod;
+	int i;
+	long long mod;
 	for(i = mod = 0; n[i]; i++)
 		mod = (mod * 10 + n[i] - '0') % d;
 	return mod;
