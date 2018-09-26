@@ -7,15 +7,15 @@
 /*
  the thing is that you need to reduce the constant of the algorithm by storing more than just a digit in every array slot of the big number representation, so that the number of operations needed to calculate the mod is also reduced. For example:
 
-123456789 can be stored as
+ 123456789 can be stored as
  1|2|3|4|5|6|7|8|9
-where each slot is a char, or as
-123|456|789
-where each slot is a int.
+ where each slot is a char, or as
+ 123|456|789
+ where each slot is a int.
 
-This does not reduce the complexity of the algorithm, but speeds up the mod operation.
+ This does not reduce the complexity of the algorithm, but speeds up the mod operation.
 
-Now, you can also test your algorithm in  https://www.spoj.com/problems/CRYPTON/ where the judge is a bit less strict. There is not needed to do this "compression" of the large number
+ Now, you can also test your algorithm in  https://www.spoj.com/problems/CRYPTON/ where the judge is a bit less strict. There is not needed to do this "compression" of the large number
  */
 
 #if 1
@@ -604,8 +604,6 @@ CACA_COMUN_FUNC_STATICA natural numero_largote_mod(natural *n, natural n_tam,
 	return mod;
 }
 
-#endif
-
 CACA_COMUN_FUNC_STATICA natural numero_largote_comprime(natural *a,
 		natural a_tam, natural tam_unidad) {
 	assert_timeout(tam_unidad > 1);
@@ -629,6 +627,9 @@ CACA_COMUN_FUNC_STATICA natural numero_largote_comprime(natural *a,
 	}
 	return j;
 }
+
+#endif
+
 #if 1
 
 #define PRIMOS_CACA_MAX ((int)1E6)
@@ -649,6 +650,9 @@ CACA_COMUN_FUNC_STATICA natural primos_caca_criba(natural limite) {
 		for (natural j = 0; j < primos_caca_tam && primos_caca[j] * i <= limite;
 				j++) {
 			primos_caca_es_primo[primos_caca[j] * i] = falso;
+			if (!(i % primos_caca[j])) {
+				break;
+			}
 		}
 	}
 	return primos_caca_tam;
